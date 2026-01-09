@@ -29,6 +29,13 @@ make openapi
 # - openapi.json
 ```
 
+## Environment Variables
+
+- `ANYTYPE_API_DEBUG`: Enable Gin debug logging when set to `1`.
+- `ANYTYPE_API_DISABLE_RATE_LIMIT`: Disable API rate limiting when set to `1`.
+- `ANYTYPE_OPENAPI_SERVER_URL`: Overrides the `servers` URL returned by `/docs/openapi.json`.
+  Use this when the API is exposed behind a reverse proxy or Ingress so clients can discover the correct base URL.
+
 ## Architecture Overview
 
 ### Layer Structure

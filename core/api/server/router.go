@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 
@@ -95,8 +96,37 @@ func (srv *Server) registerDocumentationRoutes(router *gin.Engine, openapiYAML [
 	})
 
 	router.GET("/docs/openapi.json", func(c *gin.Context) {
-		c.Data(http.StatusOK, "application/json", openapiJSON)
+		serverURL := os.Getenv("ANYTYPE_OPENAPI_SERVER_URL")
+		if serverURL == "" {
+			c.Data(http.StatusOK, "application/json", openapiJSON)
+			return
+		}
+
+		patched, ok := patchOpenAPIServers(openapiJSON, serverURL)
+		if !ok {
+			c.Data(http.StatusOK, "application/json", openapiJSON)
+			return
+		}
+
+		c.Data(http.StatusOK, "application/json", patched)
 	})
+}
+
+func patchOpenAPIServers(openapiJSON []byte, serverURL string) ([]byte, bool) {
+	var doc map[string]any
+	if err := json.Unmarshal(openapiJSON, &doc); err != nil {
+		return nil, false
+	}
+	if serverURL == "" {
+		return nil, false
+	}
+
+	doc["servers"] = []map[string]string{{"url": serverURL}}
+	patched, err := json.Marshal(doc)
+	if err != nil {
+		return nil, false
+	}
+	return patched, true
 }
 
 // registerAuthRoutes registers authentication routes (no auth required)
